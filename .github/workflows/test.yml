@@ -27,6 +27,7 @@ jobs:
       - name: Install and test
         env:
           HOMEBREW_NO_AUTO_UPDATE: '1'
+          HOMEBREW_NO_ASK: '1'
           HOMEBREW_CURL_RETRIES: '1'
         run: |
           printf 'connect-timeout = 15\nmax-time = 90\n' > "$RUNNER_TEMP/themis-curlrc"
