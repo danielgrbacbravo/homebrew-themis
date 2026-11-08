@@ -55,7 +55,7 @@ def main():
     archive = fetch(prefix + name)
     if hashlib.sha256(archive).hexdigest() != expected:
         raise ValueError("Source archive checksum mismatch")
-    formula = '''class Themis < Formula
+    formula = r'''class Themis < Formula
   desc "CLI and terminal UI for the Themis programming judge"
   homepage "https://github.com/danielgrbacbravo/themis"
   url "SOURCE_URL"
