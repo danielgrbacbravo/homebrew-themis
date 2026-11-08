@@ -71,9 +71,16 @@ def main():
     ENV["GOFLAGS"] = "-mod=vendor"
     system "go", "build", *std_go_args(ldflags: "-s -w -X main.version=#{version}"), "./cmd/themis"
     doc.install "docs/agent-cli.md"
+    Dir.glob("vendor/**/*").each do |path|
+      next unless File.file?(path) && File.basename(path).match?(/\A(?:LICENSE|NOTICE|COPYING|COPYRIGHT|AUTHORS)/i)
+
+      relative = Pathname(path).relative_path_from(Pathname("vendor"))
+      (pkgshare/"licenses"/relative.dirname).install path
+    end
   end
 
   test do
+    assert_predicate pkgshare/"licenses", :directory?
     assert_match "themis #{version}", shell_output("#{bin}/themis --version")
     output = JSON.parse(shell_output("#{bin}/themis capabilities --json"))
     assert_equal "ok", output.fetch("status")
