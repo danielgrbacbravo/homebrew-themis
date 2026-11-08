@@ -24,6 +24,28 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Cache verified source for Linux
+        if: runner.os == 'Linux'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+          python3 - <<'PYTHON'
+          import hashlib, os, pathlib, re, shutil, subprocess
+          formula = pathlib.Path("Formula/themis.rb").read_text()
+          url = re.search(r'^  url "([^"\n]+)"$', formula, re.M)[1]
+          version = re.search(r'^  version "([0-9.]+)"$', formula, re.M)[1]
+          expected = re.search(r'^  sha256 "([0-9a-f]{64})"$', formula, re.M)[1]
+          name = f"themis_{version}_source.tar.gz"
+          assert url == f"https://github.com/danielgrbacbravo/themis/releases/download/v{version}/{name}"
+          archive = pathlib.Path(os.environ["RUNNER_TEMP"]) / name
+          subprocess.run(["gh", "release", "download", f"v{version}", "--repo", "danielgrbacbravo/themis", "--pattern", name, "--output", str(archive)], check=True, timeout=120)
+          assert hashlib.sha256(archive.read_bytes()).hexdigest() == expected, "Source checksum mismatch"
+          cache = pathlib.Path(subprocess.check_output(["brew", "--cache"], text=True).strip()) / "downloads"
+          cache.mkdir(parents=True, exist_ok=True)
+          shutil.copyfile(archive, cache / (hashlib.sha256(url.encode()).hexdigest() + "--" + name))
+          print("Cached the checksum-verified source; Homebrew will verify it again on installation.")
+          PYTHON
       - name: Install and test
         env:
           HOMEBREW_NO_AUTO_UPDATE: '1'

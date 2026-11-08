@@ -16,3 +16,5 @@ Update with `brew update && brew upgrade themis`. Remove the package with `brew 
 The updater uses GitHub CLI (`gh`), included on GitHub-hosted runners. The update workflow checks the latest stable release every six hours and can also be run manually from Actions. It verifies the source archive against the release checksum before updating the formula. It uses only this repository's built-in workflow token; no personal access token is required. The formula install/test workflow can be dispatched manually after an automated update (GitHub does not trigger push workflows for commits made with its workflow token).
 
 Direct binary downloads, checksums, and corresponding source are available on the main repository's [Releases](https://github.com/danielgrbacbravo/themis/releases) page.
+
+The Linux CI job prefetches the same checksum-pinned source with GitHub CLI into Homebrew’s download cache to avoid slow release-header requests. Homebrew still verifies the formula checksum during installation.
